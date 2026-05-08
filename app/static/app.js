@@ -97,6 +97,25 @@ function initHost() {
   document.getElementById('start-btn')?.addEventListener('click', () => hostAction(gameCode, pin, 'start'));
   document.getElementById('stop-btn')?.addEventListener('click',  () => hostAction(gameCode, pin, 'stop'));
   document.getElementById('reveal-btn')?.addEventListener('click', () => hostAction(gameCode, pin, 'reveal'));
+
+  // End game button
+  document.getElementById('end-game-btn')?.addEventListener('click', () => endGame(gameCode, pin));
+}
+
+async function endGame(gameCode, pin) {
+  const btn = document.getElementById('end-game-btn');
+  if (!confirm('End the game and show final results to everyone?')) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Ending...'; }
+  const fd = new FormData();
+  fd.append('pin', pin);
+  const res = await fetch(`/api/host/${gameCode}/end`, { method: 'POST', body: fd });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok && data.redirect) {
+    window.location.href = data.redirect;
+  } else {
+    showToast(data.detail || 'Failed to end game', 'cheeks');
+    if (btn) { btn.disabled = false; btn.textContent = '🏁 End Game & See Results'; }
+  }
 }
 
 async function handleNewRound(e, gameCode, pin) {
@@ -164,6 +183,9 @@ function handleHostMessage(msg, gameCode, pin) {
     case 'player_joined':
       setText('pc-num', msg.player_count);
       showToast(`${msg.display_name} joined!`, 'info', 2000);
+      break;
+    case 'game_ended':
+      window.location.href = msg.results_url;
       break;
   }
 }
@@ -278,6 +300,9 @@ function handlePlayMessage(msg) {
     case 'round_new':
       renderPlayWaiting(main);
       break;
+    case 'game_ended':
+      renderPlayGameEnded(main, msg);
+      break;
   }
 }
 
@@ -325,6 +350,19 @@ function renderPlayClosed(main) {
         <span>🔒 Voting closed</span>
         <p>Waiting for results...</p>
       </div>
+    </div>
+  `;
+}
+
+function renderPlayGameEnded(main, msg) {
+  main.innerHTML = `
+    <div class="waiting-screen">
+      <div class="waiting-icon">🏁</div>
+      <h2>Game Over!</h2>
+      <p>${escHtml(msg.overall_verdict)}</p>
+      <a href="${escHtml(msg.results_url)}" class="btn btn-host btn-lg" style="margin-top:16px">
+        See Full Results →
+      </a>
     </div>
   `;
 }
@@ -390,6 +428,9 @@ function handleDisplayMessage(msg) {
       break;
     case 'player_joined':
       showToast(`${msg.display_name} joined! (${msg.player_count} total)`, 'info', 2000);
+      break;
+    case 'game_ended':
+      window.location.href = msg.results_url;
       break;
   }
 }
