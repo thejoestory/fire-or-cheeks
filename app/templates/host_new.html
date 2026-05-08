@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Create Game — Fire or Cheeks{% endblock %}
+{% block body %}
+<div class="page-center">
+  <div class="card">
+    <div class="card-header">
+      <a href="/" class="back-link">← Back</a>
+      <h1>🎮 Create a Game</h1>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/host/new" class="form-stack">
+      <label class="field-label">Game Title
+        <input type="text" name="title" placeholder="e.g. Friday Vibes Check" maxlength="80" class="input" required autofocus />
+      </label>
+
+      <label class="field-label">Host PIN
+        <input type="password" name="pin" placeholder="Enter host PIN" class="input" required />
+        <span class="field-hint">Set via HOST_PIN in your .env (default: 1234)</span>
+      </label>
+
+      <button type="submit" class="btn btn-host btn-lg">Create Game 🔥</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
