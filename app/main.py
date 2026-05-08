@@ -160,6 +160,8 @@ async def play_page(request: Request, code: str):
     player = services.get_player(player_id)
     if not player or player.game_id != game.id:
         return RedirectResponse(f"/join?code={code}", status_code=303)
+    if game.status == "finished":
+        return RedirectResponse(f"/results/{code}", status_code=303)
     current_round = services.get_current_round(game.id)
     my_vote = None
     if current_round:
@@ -180,6 +182,8 @@ async def display_page(request: Request, code: str):
     game = services.get_game_by_code(code)
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
+    if game.status == "finished":
+        return RedirectResponse(f"/results/{code}", status_code=303)
     current_round = services.get_current_round(game.id)
     counts = services.get_vote_counts(current_round.id) if current_round else None
     return templates.TemplateResponse("display.html", {
@@ -187,6 +191,19 @@ async def display_page(request: Request, code: str):
         "game": game,
         "current_round": current_round,
         "counts": counts,
+    })
+
+
+@app.get("/results/{code}", response_class=HTMLResponse)
+async def results_page(request: Request, code: str):
+    game = services.get_game_by_code(code)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    summary = services.get_game_summary(game.id)
+    return templates.TemplateResponse("results.html", {
+        "request": request,
+        "game": game,
+        "summary": summary,
     })
 
 
@@ -266,6 +283,37 @@ async def stop_voting(code: str, pin: str = Form(...)):
     round_ = services.update_round_status(round_.id, "closed")
     await manager.broadcast(code, {"type": "voting_closed", "round_id": round_.id})
     return JSONResponse({"ok": True})
+
+
+@app.post("/api/host/{code}/end")
+async def end_game(code: str, pin: str = Form(...)):
+    verify_pin(pin)
+    game = services.get_game_by_code(code)
+    if not game:
+        raise HTTPException(status_code=404, detail="Game not found")
+    services.end_game(game.id)
+    summary = services.get_game_summary(game.id)
+    rounds_data = []
+    if summary:
+        for r in summary.rounds:
+            rounds_data.append({
+                "round_number": r.round_number,
+                "image_path": r.image_path,
+                "prompt": r.prompt,
+                "fire": r.fire,
+                "cheeks": r.cheeks,
+                "total": r.total,
+                "fire_pct": r.fire_pct,
+                "cheeks_pct": r.cheeks_pct,
+                "verdict": r.verdict,
+            })
+    await manager.broadcast(code, {
+        "type": "game_ended",
+        "results_url": f"/results/{code}",
+        "rounds": rounds_data,
+        "overall_verdict": summary.overall_verdict if summary else "GAME OVER",
+    })
+    return JSONResponse({"ok": True, "redirect": f"/results/{code}"})
 
 
 @app.post("/api/host/{code}/round/reveal")

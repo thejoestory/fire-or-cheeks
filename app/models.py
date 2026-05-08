@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -71,3 +71,42 @@ class VoteCounts:
         if self.fire > self.cheeks:
             return "CERTIFIED FIRE 🔥"
         return "ABSOLUTE CHEEKS 🍑"
+
+
+@dataclass
+class RoundSummary:
+    round_number: int
+    image_path: Optional[str]
+    prompt: Optional[str]
+    fire: int
+    cheeks: int
+    total: int
+    fire_pct: int
+    cheeks_pct: int
+    verdict: str
+
+
+@dataclass
+class GameSummary:
+    game: "Game"
+    rounds: List[RoundSummary]
+
+    @property
+    def fire_wins(self):
+        return sum(1 for r in self.rounds if "FIRE" in r.verdict)
+
+    @property
+    def cheeks_wins(self):
+        return sum(1 for r in self.rounds if "CHEEKS" in r.verdict)
+
+    @property
+    def chaos_splits(self):
+        return sum(1 for r in self.rounds if "CHAOS" in r.verdict)
+
+    @property
+    def overall_verdict(self):
+        if self.fire_wins > self.cheeks_wins:
+            return "OVERALL FIRE 🔥"
+        if self.cheeks_wins > self.fire_wins:
+            return "OVERALL CHEEKS 🍑"
+        return "IT'S A TIE 🤝"

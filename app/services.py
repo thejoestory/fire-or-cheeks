@@ -3,7 +3,7 @@ import string
 import os
 from typing import Optional, List
 from .database import get_db
-from .models import Game, Round, Player, Vote, VoteCounts
+from .models import Game, Round, Player, Vote, VoteCounts, RoundSummary, GameSummary
 
 
 def generate_code(length=6):
@@ -151,3 +151,34 @@ def get_all_rounds(game_id: int) -> List[Round]:
             (game_id,)
         ).fetchall()
         return [Round(**dict(r)) for r in rows]
+
+
+def end_game(game_id: int) -> Optional[Game]:
+    with get_db() as conn:
+        conn.execute("UPDATE games SET status = 'finished' WHERE id = ?", (game_id,))
+        row = conn.execute("SELECT * FROM games WHERE id = ?", (game_id,)).fetchone()
+        return Game(**dict(row)) if row else None
+
+
+def get_game_summary(game_id: int) -> Optional[GameSummary]:
+    game = get_game_by_id(game_id)
+    if not game:
+        return None
+    rounds = get_all_rounds(game_id)
+    summaries = []
+    for r in rounds:
+        if r.status not in ("closed", "revealed"):
+            continue
+        counts = get_vote_counts(r.id)
+        summaries.append(RoundSummary(
+            round_number=r.round_number,
+            image_path=r.image_path,
+            prompt=r.prompt,
+            fire=counts.fire,
+            cheeks=counts.cheeks,
+            total=counts.total,
+            fire_pct=counts.fire_pct,
+            cheeks_pct=counts.cheeks_pct,
+            verdict=counts.verdict,
+        ))
+    return GameSummary(game=game, rounds=summaries)

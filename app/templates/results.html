@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Results: {{ game.title }} — Fire or Cheeks{% endblock %}
+{% block body %}
+<div class="results-layout">
+
+  <header class="results-header">
+    <div class="results-header-inner">
+      <div>
+        <div class="results-game-title">🏁 {{ game.title }}</div>
+        <div class="results-subtitle">Game Over — Final Results</div>
+      </div>
+      <div class="results-header-links">
+        <a href="/" class="btn btn-sm btn-outline">← Home</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="results-main">
+
+    {% if summary and summary.rounds %}
+
+      <!-- Overall verdict banner -->
+      <div class="results-overall animate-verdict">
+        <div class="results-overall-verdict">{{ summary.overall_verdict }}</div>
+        <div class="results-overall-stats">
+          <span class="os-fire">🔥 {{ summary.fire_wins }} Fire win{% if summary.fire_wins != 1 %}s{% endif %}</span>
+          <span class="os-sep">·</span>
+          <span class="os-cheeks">🍑 {{ summary.cheeks_wins }} Cheeks win{% if summary.cheeks_wins != 1 %}s{% endif %}</span>
+          {% if summary.chaos_splits %}
+          <span class="os-sep">·</span>
+          <span class="os-chaos">🤯 {{ summary.chaos_splits }} Chaos split{% if summary.chaos_splits != 1 %}s{% endif %}</span>
+          {% endif %}
+          <span class="os-sep">·</span>
+          <span class="os-total">{{ summary.rounds | length }} round{% if summary.rounds | length != 1 %}s{% endif %} played</span>
+        </div>
+      </div>
+
+      <!-- Round cards -->
+      <div class="results-rounds">
+        {% for r in summary.rounds %}
+        <div class="results-card {% if 'FIRE' in r.verdict %}card-fire{% elif 'CHEEKS' in r.verdict %}card-cheeks{% else %}card-chaos{% endif %}">
+          <div class="rc-header">
+            <span class="round-badge">Round {{ r.round_number }}</span>
+            <span class="rc-verdict">{{ r.verdict }}</span>
+          </div>
+
+          {% if r.image_path %}
+          <div class="rc-image-wrap">
+            <img src="{{ r.image_path }}" class="rc-image" alt="Round {{ r.round_number }} image" />
+          </div>
+          {% endif %}
+
+          {% if r.prompt %}
+          <div class="rc-prompt">{{ r.prompt }}</div>
+          {% endif %}
+
+          <div class="rc-bars">
+            <div class="rc-bar-row">
+              <span class="rc-bar-label fire-label">🔥 FIRE</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-fire" style="width: {{ r.fire_pct }}%"></div>
+              </div>
+              <span class="rc-bar-nums">{{ r.fire }} <span class="rc-pct">({{ r.fire_pct }}%)</span></span>
+            </div>
+            <div class="rc-bar-row">
+              <span class="rc-bar-label cheeks-label">🍑 CHEEKS</span>
+              <div class="bar-track">
+                <div class="bar-fill bar-cheeks" style="width: {{ r.cheeks_pct }}%"></div>
+              </div>
+              <span class="rc-bar-nums">{{ r.cheeks }} <span class="rc-pct">({{ r.cheeks_pct }}%)</span></span>
+            </div>
+            <div class="rc-total">{{ r.total }} vote{% if r.total != 1 %}s{% endif %}</div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <div class="no-round" style="margin: 60px auto;">
+        <div class="no-round-icon">🤷</div>
+        <h2>No completed rounds</h2>
+        <p>The game ended before any rounds were revealed.</p>
+      </div>
+    {% endif %}
+
+  </main>
+
+</div>
+{% endblock %}
