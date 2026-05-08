@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}Playing — {{ game.title }}{% endblock %}
+{% block body %}
+<div class="play-layout" id="play-layout">
+
+  <header class="play-header">
+    <div class="play-header-inner">
+      <span class="game-code-sm">{{ game.code }}</span>
+      <span class="player-name-sm">{{ player.display_name }}</span>
+    </div>
+  </header>
+
+  <main class="play-main" id="play-main">
+
+    {% if not current_round or current_round.status == 'pending' %}
+    <div class="waiting-screen" id="waiting-screen">
+      <div class="waiting-icon">⏳</div>
+      <h2>Waiting for host...</h2>
+      <p>Hang tight — the host is setting up the next round.</p>
+    </div>
+
+    {% elif current_round.status == 'voting' %}
+    <div class="voting-screen" id="voting-screen">
+      {% if current_round.image_path %}
+      <div class="play-image-wrap">
+        <img src="{{ current_round.image_path }}" class="play-image" alt="Round image" />
+      </div>
+      {% endif %}
+      {% if current_round.prompt %}
+      <div class="play-prompt">{{ current_round.prompt }}</div>
+      {% endif %}
+      <div class="vote-buttons" id="vote-buttons">
+        <button
+          class="vote-btn vote-fire {% if my_vote == 'fire' %}voted{% endif %}"
+          data-vote="fire"
+          id="btn-fire"
+          onclick="castVote('fire')"
+        >
+          🔥<br><span>FIRE</span>
+        </button>
+        <button
+          class="vote-btn vote-cheeks {% if my_vote == 'cheeks' %}voted{% endif %}"
+          data-vote="cheeks"
+          id="btn-cheeks"
+          onclick="castVote('cheeks')"
+        >
+          🍑<br><span>CHEEKS</span>
+        </button>
+      </div>
+      {% if my_vote %}
+      <div class="voted-msg" id="voted-msg">
+        You voted <strong>{{ my_vote | upper }}</strong> — you can change it until voting closes.
+      </div>
+      {% else %}
+      <div class="voted-msg hidden" id="voted-msg">You voted — you can change it until voting closes.</div>
+      {% endif %}
+    </div>
+
+    {% elif current_round.status == 'closed' %}
+    <div class="closed-screen" id="closed-screen">
+      {% if current_round.image_path %}
+      <div class="play-image-wrap play-image-wrap-sm">
+        <img src="{{ current_round.image_path }}" class="play-image" alt="Round image" />
+      </div>
+      {% endif %}
+      {% if current_round.prompt %}
+      <div class="play-prompt">{{ current_round.prompt }}</div>
+      {% endif %}
+      <div class="voting-closed-msg">
+        <span>🔒 Voting closed</span>
+        {% if my_vote %}
+        <p>Your vote: <strong>{{ my_vote | upper }}</strong></p>
+        {% else %}
+        <p>You didn't vote this round.</p>
+        {% endif %}
+      </div>
+      <p class="waiting-reveal">Waiting for results...</p>
+    </div>
+
+    {% elif current_round.status == 'revealed' %}
+    <div class="revealed-screen" id="revealed-screen">
+      {% if current_round.image_path %}
+      <div class="play-image-wrap play-image-wrap-sm">
+        <img src="{{ current_round.image_path }}" class="play-image" alt="Round image" />
+      </div>
+      {% endif %}
+      {% if current_round.prompt %}
+      <div class="play-prompt">{{ current_round.prompt }}</div>
+      {% endif %}
+      <div class="result-bars">
+        <div class="result-row">
+          <span class="result-label fire-label">🔥 FIRE</span>
+          <div class="bar-track">
+            <div class="bar-fill bar-fire" style="width: {{ counts.fire_pct if counts else 0 }}%"></div>
+          </div>
+          <span class="result-pct">{{ counts.fire_pct if counts else 0 }}%</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label cheeks-label">🍑 CHEEKS</span>
+          <div class="bar-track">
+            <div class="bar-fill bar-cheeks" style="width: {{ counts.cheeks_pct if counts else 0 }}%"></div>
+          </div>
+          <span class="result-pct">{{ counts.cheeks_pct if counts else 0 }}%</span>
+        </div>
+      </div>
+      <div class="verdict play-verdict" id="play-verdict">{{ counts.verdict if counts else '' }}</div>
+      {% if my_vote %}
+      <p class="my-vote-reveal">Your vote: <strong>{{ my_vote | upper }}</strong></p>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </main>
+
+  <input type="hidden" id="game-code" value="{{ game.code }}" />
+  <input type="hidden" id="player-id" value="{{ player.id }}" />
+  <input type="hidden" id="round-status" value="{{ current_round.status if current_round else 'none' }}" />
+  <input type="hidden" id="current-round-id" value="{{ current_round.id if current_round else '' }}" />
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  initPlay();
+</script>
+{% endblock %}

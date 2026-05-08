@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Fire or Cheeks — Home{% endblock %}
+{% block body %}
+<div class="home-page">
+  <div class="home-hero">
+    <div class="home-title">
+      <span class="emoji-fire">🔥</span>
+      <h1>Fire or<br>Cheeks</h1>
+      <span class="emoji-cheeks">🍑</span>
+    </div>
+    <p class="home-tagline">The virtual meeting voting game.<br>Is it <strong>FIRE</strong> or absolute <strong>CHEEKS</strong>?</p>
+  </div>
+
+  <div class="home-actions">
+    <a href="/host/new" class="btn btn-host btn-lg">
+      🎮 Host a Game
+    </a>
+
+    <div class="home-divider"><span>or</span></div>
+
+    <form class="join-form" action="/join" method="GET">
+      <h2 class="join-title">Join a Game</h2>
+      <div class="input-group">
+        <input
+          type="text"
+          name="code"
+          placeholder="Game Code (e.g. ABC123)"
+          maxlength="6"
+          autocomplete="off"
+          autocapitalize="characters"
+          class="input-code"
+        />
+      </div>
+      <button type="submit" class="btn btn-join btn-lg">Join →</button>
+    </form>
+  </div>
+
+  <footer class="home-footer">
+    <p>Display screen? <a href="/join">Open a game by code</a> then use the Display link.</p>
+  </footer>
+</div>
+{% endblock %}

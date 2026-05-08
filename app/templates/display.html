@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Display: {{ game.title }} — Fire or Cheeks{% endblock %}
+{% block body %}
+<div class="display-layout" id="display-layout">
+
+  <header class="display-header">
+    <div class="display-title">🔥 {{ game.title }} 🍑</div>
+    <div class="display-code">
+      Join: <strong>{{ game.code }}</strong>
+    </div>
+  </header>
+
+  <main class="display-main" id="display-main">
+
+    {% if not current_round or current_round.status == 'pending' %}
+    <div class="display-waiting" id="display-waiting">
+      <div class="dw-icon">🎮</div>
+      <h2>Game in progress</h2>
+      <p>Join with code <strong class="big-code">{{ game.code }}</strong></p>
+    </div>
+
+    {% else %}
+    <div class="display-round" id="display-round">
+      <div class="display-round-header">
+        <span class="round-badge">Round {{ current_round.round_number }}</span>
+        <span class="round-status-badge status-{{ current_round.status }}" id="d-status-badge">
+          {{ current_round.status | upper }}
+        </span>
+      </div>
+
+      {% if current_round.image_path %}
+      <div class="display-image-wrap">
+        <img src="{{ current_round.image_path }}" class="display-image" alt="Round image" />
+      </div>
+      {% endif %}
+
+      {% if current_round.prompt %}
+      <div class="display-prompt" id="d-prompt">{{ current_round.prompt }}</div>
+      {% endif %}
+
+      <div class="display-bars" id="d-bars">
+        {% set fire_pct = counts.fire_pct if counts else 0 %}
+        {% set cheeks_pct = counts.cheeks_pct if counts else 0 %}
+        {% set fire_count = counts.fire if counts else 0 %}
+        {% set cheeks_count = counts.cheeks if counts else 0 %}
+        {% set total = counts.total if counts else 0 %}
+
+        {% if current_round.status in ['voting', 'closed', 'revealed'] %}
+        <div class="d-bar-row">
+          <span class="d-bar-label fire-label">🔥 FIRE</span>
+          <div class="bar-track bar-track-lg">
+            <div class="bar-fill bar-fire" id="d-bar-fire" style="width: {{ fire_pct }}%"></div>
+          </div>
+          <span class="d-bar-count" id="d-num-fire">{{ fire_count }}</span>
+        </div>
+        <div class="d-bar-row">
+          <span class="d-bar-label cheeks-label">🍑 CHEEKS</span>
+          <div class="bar-track bar-track-lg">
+            <div class="bar-fill bar-cheeks" id="d-bar-cheeks" style="width: {{ cheeks_pct }}%"></div>
+          </div>
+          <span class="d-bar-count" id="d-num-cheeks">{{ cheeks_count }}</span>
+        </div>
+        <div class="d-total" id="d-total">{{ total }} vote{% if total != 1 %}s{% endif %}</div>
+        {% endif %}
+      </div>
+
+      {% if current_round.status == 'revealed' %}
+      <div class="display-verdict animate-verdict" id="d-verdict">
+        {{ counts.verdict if counts else '' }}
+      </div>
+      {% else %}
+      <div class="display-verdict hidden" id="d-verdict"></div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+  </main>
+
+  <input type="hidden" id="game-code" value="{{ game.code }}" />
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  initDisplay();
+</script>
+{% endblock %}

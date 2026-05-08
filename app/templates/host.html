@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Host: {{ game.title }} — Fire or Cheeks{% endblock %}
+{% block body %}
+<div class="host-layout">
+
+  <!-- Sidebar -->
+  <aside class="host-sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="back-link">← Home</a>
+      <h2 class="game-title-sm">{{ game.title }}</h2>
+      <div class="game-code-badge">
+        <span class="gc-label">Join Code</span>
+        <span class="gc-code">{{ game.code }}</span>
+      </div>
+      <div class="player-count" id="player-count">
+        👥 <span id="pc-num">{{ player_count }}</span> players
+      </div>
+      <div class="sidebar-links">
+        <a href="/display/{{ game.code }}" target="_blank" class="btn btn-sm btn-outline">📺 Display Screen</a>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>New Round</h3>
+      <form id="new-round-form" enctype="multipart/form-data" class="form-stack-sm">
+        <input type="hidden" name="pin" value="{{ host_pin }}" />
+        <label class="field-label-sm">Image (optional)
+          <input type="file" name="image" accept="image/*" class="input-file" id="image-input" />
+        </label>
+        <div id="image-preview-wrap" class="image-preview-wrap hidden">
+          <img id="image-preview" src="" alt="preview" />
+          <button type="button" class="btn-clear-image" id="clear-image">✕</button>
+        </div>
+        <label class="field-label-sm">Prompt / Caption (optional)
+          <textarea name="prompt" rows="2" placeholder="e.g. My manager's new haircut" class="input" maxlength="200"></textarea>
+        </label>
+        <button type="submit" class="btn btn-host btn-block" id="new-round-btn">
+          ➕ Create Round
+        </button>
+      </form>
+    </div>
+
+    <div class="sidebar-section">
+      <h3>Round Controls</h3>
+      <div class="control-buttons">
+        <button class="btn btn-start btn-block" id="start-btn" {% if not current_round or current_round.status not in ['pending'] %}disabled{% endif %}>
+          ▶ Start Voting
+        </button>
+        <button class="btn btn-stop btn-block" id="stop-btn" {% if not current_round or current_round.status != 'voting' %}disabled{% endif %}>
+          ⏹ Stop Voting
+        </button>
+        <button class="btn btn-reveal btn-block" id="reveal-btn" {% if not current_round or current_round.status != 'closed' %}disabled{% endif %}>
+          👁 Reveal Results
+        </button>
+      </div>
+      <input type="hidden" id="host-pin" value="{{ host_pin }}" />
+      <input type="hidden" id="game-code" value="{{ game.code }}" />
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="host-main">
+    <div class="round-display" id="round-display">
+      {% if current_round %}
+        <div class="round-header">
+          <span class="round-badge">Round {{ current_round.round_number }}</span>
+          <span class="round-status-badge status-{{ current_round.status }}" id="status-badge">{{ current_round.status | upper }}</span>
+        </div>
+
+        {% if current_round.image_path %}
+          <div class="round-image-wrap">
+            <img src="{{ current_round.image_path }}" class="round-image" alt="Round image" />
+          </div>
+        {% endif %}
+
+        {% if current_round.prompt %}
+          <div class="round-prompt" id="round-prompt">{{ current_round.prompt }}</div>
+        {% endif %}
+
+        <div class="vote-bars" id="vote-bars">
+          {% set fire_pct = counts.fire_pct if counts else 0 %}
+          {% set cheeks_pct = counts.cheeks_pct if counts else 0 %}
+          {% set fire_count = counts.fire if counts else 0 %}
+          {% set cheeks_count = counts.cheeks if counts else 0 %}
+          {% set total = counts.total if counts else 0 %}
+          <div class="vote-bar-row">
+            <span class="vote-label fire-label">🔥 FIRE</span>
+            <div class="bar-track">
+              <div class="bar-fill bar-fire" id="bar-fire" style="width: {{ fire_pct }}%"></div>
+            </div>
+            <span class="vote-num" id="num-fire">{{ fire_count }}</span>
+            <span class="vote-pct" id="pct-fire">{{ fire_pct }}%</span>
+          </div>
+          <div class="vote-bar-row">
+            <span class="vote-label cheeks-label">🍑 CHEEKS</span>
+            <div class="bar-track">
+              <div class="bar-fill bar-cheeks" id="bar-cheeks" style="width: {{ cheeks_pct }}%"></div>
+            </div>
+            <span class="vote-num" id="num-cheeks">{{ cheeks_count }}</span>
+            <span class="vote-pct" id="pct-cheeks">{{ cheeks_pct }}%</span>
+          </div>
+          <div class="vote-total" id="vote-total">{{ total }} vote{% if total != 1 %}s{% endif %}</div>
+        </div>
+
+        {% if current_round.status == 'revealed' %}
+        <div class="verdict" id="verdict">
+          {{ counts.verdict if counts else '' }}
+        </div>
+        {% else %}
+        <div class="verdict hidden" id="verdict"></div>
+        {% endif %}
+
+      {% else %}
+        <div class="no-round" id="no-round">
+          <div class="no-round-icon">🎮</div>
+          <h2>No round yet</h2>
+          <p>Create a new round using the panel on the left.</p>
+        </div>
+      {% endif %}
+    </div>
+  </main>
+
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  initHost();
+</script>
+{% endblock %}

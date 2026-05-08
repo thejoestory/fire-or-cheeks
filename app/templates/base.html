@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Fire or Cheeks 🔥🍑{% endblock %}</title>
+  <link rel="stylesheet" href="{{ request.app.url_path_for('static', path='styles.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% block body %}{% endblock %}
+  <script>
+    // Expose root path for JS
+    window.ROOT_PATH = "{{ request.scope.get('root_path', '') }}";
+  </script>
+  <script src="{{ request.app.url_path_for('static', path='app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
