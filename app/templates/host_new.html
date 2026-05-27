@@ -4,7 +4,7 @@
 <div class="page-center">
   <div class="card">
     <div class="card-header">
-      <a href="/" class="back-link">← Back</a>
+      <a href="{{ request.url_for('home') }}" class="back-link">← Back</a>
       <h1>🎮 Create a Game</h1>
     </div>
 
@@ -12,7 +12,7 @@
     <div class="alert alert-error">{{ error }}</div>
     {% endif %}
 
-    <form method="POST" action="/host/new" class="form-stack">
+    <form method="POST" action="{{ request.url_for('host_create') }}" class="form-stack">
       <label class="field-label">Game Title
         <input type="text" name="title" placeholder="e.g. Friday Vibes Check" maxlength="80" class="input" required autofocus />
       </label>
