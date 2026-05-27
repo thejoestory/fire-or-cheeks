@@ -211,6 +211,7 @@ async def results_page(request: Request, code: str):
 
 @app.post("/api/host/{code}/round/new")
 async def new_round(
+    request: Request,
     code: str,
     pin: str = Form(...),
     prompt: Optional[str] = Form(None),
@@ -233,7 +234,7 @@ async def new_round(
         dest = UPLOAD_DIR / filename
         async with aiofiles.open(dest, "wb") as f:
             await f.write(data)
-        image_path = f"/static/uploads/{filename}"
+        image_path = str(request.url_for("static", path=f"uploads/{filename}"))
 
     prompt = prompt.strip() if prompt else None
     if not image_path and not prompt:
@@ -286,7 +287,7 @@ async def stop_voting(code: str, pin: str = Form(...)):
 
 
 @app.post("/api/host/{code}/end")
-async def end_game(code: str, pin: str = Form(...)):
+async def end_game(request: Request, code: str, pin: str = Form(...)):
     verify_pin(pin)
     game = services.get_game_by_code(code)
     if not game:
