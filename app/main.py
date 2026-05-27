@@ -89,7 +89,7 @@ async def host_create(
         )
     title = title.strip()[:80] or "Fire or Cheeks"
     game = services.create_game(title)
-    return RedirectResponse(f"/host/{game.code}", status_code=303)
+    return RedirectResponse(request.url_for('host_dashboard', code=game.code), status_code=303)
 
 
 @app.get("/host/{code}", response_class=HTMLResponse)
@@ -137,7 +137,7 @@ async def join_game(
             status_code=422,
         )
     player = services.create_or_get_player(game.id, display_name)
-    response = RedirectResponse(f"/play/{code}", status_code=303)
+    response = RedirectResponse(request.url_for('play_page', code=code), status_code=303)
     response.set_cookie("player_id", str(player.id), max_age=86400 * 7, httponly=True)
     response.set_cookie("player_name", display_name, max_age=86400 * 7)
 
@@ -156,12 +156,12 @@ async def play_page(request: Request, code: str):
         raise HTTPException(status_code=404, detail="Game not found")
     player_id = session_player_id(request)
     if not player_id:
-        return RedirectResponse(f"/join?code={code}", status_code=303)
+        return RedirectResponse(str(request.url_for('join_page')) + f"?code={code}", status_code=303)
     player = services.get_player(player_id)
     if not player or player.game_id != game.id:
-        return RedirectResponse(f"/join?code={code}", status_code=303)
+        return RedirectResponse(str(request.url_for('join_page')) + f"?code={code}", status_code=303)
     if game.status == "finished":
-        return RedirectResponse(f"/results/{code}", status_code=303)
+        return RedirectResponse(request.url_for('results_page', code=code), status_code=303)
     current_round = services.get_current_round(game.id)
     my_vote = None
     if current_round:
@@ -183,7 +183,7 @@ async def display_page(request: Request, code: str):
     if not game:
         raise HTTPException(status_code=404, detail="Game not found")
     if game.status == "finished":
-        return RedirectResponse(f"/results/{code}", status_code=303)
+        return RedirectResponse(request.url_for('results_page', code=code), status_code=303)
     current_round = services.get_current_round(game.id)
     counts = services.get_vote_counts(current_round.id) if current_round else None
     return templates.TemplateResponse("display.html", {
@@ -307,13 +307,14 @@ async def end_game(code: str, pin: str = Form(...)):
                 "cheeks_pct": r.cheeks_pct,
                 "verdict": r.verdict,
             })
+    results_url = str(request.url_for('results_page', code=code))
     await manager.broadcast(code, {
         "type": "game_ended",
-        "results_url": f"/results/{code}",
+        "results_url": results_url,
         "rounds": rounds_data,
         "overall_verdict": summary.overall_verdict if summary else "GAME OVER",
     })
-    return JSONResponse({"ok": True, "redirect": f"/results/{code}"})
+    return JSONResponse({"ok": True, "redirect": results_url})
 
 
 @app.post("/api/host/{code}/round/reveal")

@@ -6,7 +6,7 @@
   <!-- Sidebar -->
   <aside class="host-sidebar">
     <div class="sidebar-header">
-      <a href="/" class="back-link">← Home</a>
+      <a href="{{ request.url_for('home') }}" class="back-link">← Home</a>
       <h2 class="game-title-sm">{{ game.title }}</h2>
       <div class="game-code-badge">
         <span class="gc-label">Join Code</span>
@@ -16,7 +16,7 @@
         👥 <span id="pc-num">{{ player_count }}</span> players
       </div>
       <div class="sidebar-links">
-        <a href="/display/{{ game.code }}" target="_blank" class="btn btn-sm btn-outline">📺 Display Screen</a>
+        <a href="{{ request.url_for('display_page', code=game.code) }}" target="_blank" class="btn btn-sm btn-outline">📺 Display Screen</a>
       </div>
     </div>
 

@@ -12,13 +12,13 @@
   </div>
 
   <div class="home-actions">
-    <a href="/host/new" class="btn btn-host btn-lg">
+    <a href="{{ request.url_for('host_new') }}" class="btn btn-host btn-lg">
       🎮 Host a Game
     </a>
 
     <div class="home-divider"><span>or</span></div>
 
-    <form class="join-form" action="/join" method="GET">
+    <form class="join-form" action="{{ request.url_for('join_page') }}" method="GET">
       <h2 class="join-title">Join a Game</h2>
       <div class="input-group">
         <input
@@ -36,7 +36,7 @@
   </div>
 
   <footer class="home-footer">
-    <p>Display screen? <a href="/join">Open a game by code</a> then use the Display link.</p>
+    <p>Display screen? <a href="{{ request.url_for('join_page') }}">Open a game by code</a> then use the Display link.</p>
   </footer>
 </div>
 {% endblock %}

@@ -108,7 +108,7 @@ async function endGame(gameCode, pin) {
   if (btn) { btn.disabled = true; btn.textContent = 'Ending...'; }
   const fd = new FormData();
   fd.append('pin', pin);
-  const res = await fetch(`/api/host/${gameCode}/end`, { method: 'POST', body: fd });
+  const res = await fetch(`${window.ROOT_PATH}/api/host/${gameCode}/end`, { method: 'POST', body: fd });
   const data = await res.json().catch(() => ({}));
   if (res.ok && data.redirect) {
     window.location.href = data.redirect;
@@ -127,7 +127,7 @@ async function handleNewRound(e, gameCode, pin) {
 
   const fd = new FormData(form);
   try {
-    const res = await fetch(`/api/host/${gameCode}/round/new`, { method: 'POST', body: fd });
+    const res = await fetch(`${window.ROOT_PATH}/api/host/${gameCode}/round/new`, { method: 'POST', body: fd });
     const data = await res.json();
     if (!res.ok) { showToast(data.detail || 'Error creating round', 'cheeks'); }
     else {
@@ -145,7 +145,7 @@ async function handleNewRound(e, gameCode, pin) {
 async function hostAction(gameCode, pin, action) {
   const fd = new FormData();
   fd.append('pin', pin);
-  const res = await fetch(`/api/host/${gameCode}/round/${action}`, { method: 'POST', body: fd });
+  const res = await fetch(`${window.ROOT_PATH}/api/host/${gameCode}/round/${action}`, { method: 'POST', body: fd });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     showToast(data.detail || `Failed: ${action}`, 'cheeks');
@@ -261,7 +261,7 @@ function castVote(value) {
   if (!gameCode) return;
   const fd = new FormData();
   fd.append('vote_value', value);
-  fetch(`/api/vote/${gameCode}`, { method: 'POST', body: fd })
+  fetch(`${window.ROOT_PATH}/api/vote/${gameCode}`, { method: 'POST', body: fd })
     .then(r => r.json())
     .then(data => {
       if (data.ok) {

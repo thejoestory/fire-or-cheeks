@@ -4,7 +4,7 @@
 <div class="page-center">
   <div class="card">
     <div class="card-header">
-      <a href="/" class="back-link">← Back</a>
+      <a href="{{ request.url_for('home') }}" class="back-link">← Back</a>
       <h1>🎟 Join a Game</h1>
     </div>
 
@@ -12,7 +12,7 @@
     <div class="alert alert-error">{{ error }}</div>
     {% endif %}
 
-    <form method="POST" action="/join" class="form-stack">
+    <form method="POST" action="{{ request.url_for('join_game') }}" class="form-stack">
       <label class="field-label">Game Code
         <input
           type="text"
